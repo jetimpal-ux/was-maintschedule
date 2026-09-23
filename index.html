@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preventive Maintenance Schedule</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a2e; color: #fff; padding: 10px; }
+        .header { text-align: center; padding: 20px; background: linear-gradient(135deg, #0d47a1, #1565c0); border-radius: 10px 10px 0 0; }
+        .header h1 { font-size: 20px; color: #ffd700; text-transform: uppercase; letter-spacing: 2px; }
+        .header h2 { font-size: 16px; color: #fff; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: text; border: 2px dashed transparent; }
+        .header h2:hover { border-color: #ffd700; background: rgba(255,255,255,0.2); }
+        .header p { color: #b0bec5; font-size: 11px; margin-top: 5px; }
+        .edit-hint { font-size: 10px; color: #ffd700; margin-top: 5px; font-style: italic; }
+        .toolbar { display: flex; gap: 8px; padding: 12px 15px; background: #16213e; flex-wrap: wrap; align-items: center; }
+        .toolbar button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-save { background: #4caf50; color: white; }
+        .btn-edit { background: #ff9800; color: white; }
+        .btn-print { background: #2196f3; color: white; }
+        .btn-add-row { background: #9c27b0; color: white; }
+        .btn-delete { background: #f44336; color: white; padding: 5px 10px; font-size: 11px; }
+        .btn-cloud { background: #00bcd4; color: white; }
+        .print-range-selector { padding: 10px 15px; background: #0f3460; border-radius: 8px; margin: 10px 0; display: none; }
+        .print-range-selector select { padding: 6px; border-radius: 4px; border: 1px solid #455a64; background: #1a1a2e; color: #fff; font-size: 11px; }
+        .table-container { overflow-x: auto; background: #fff; border-radius: 0 0 10px 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1400px; }
+        thead th { background: #0d47a1; color: white; padding: 8px 4px; text-align: center; border: 1px solid #1565c0; font-size: 10px; position: sticky; top: 0; z-index: 10; }
+        thead th .sub-header { font-size: 9px; color: #b0bec5; display: block; margin-top: 3px; }
+        .col-odometer { background: #ffd700; color: #000; font-weight: bold; }
+        .col-oli { background: #2e7d32; }
+        .col-solar { background: #1565c0; }
+        .col-udara { background: #e65100; }
+        .col-ac { background: #6a1b9a; }
+        .col-atf { background: #c62828; }
+        .col-injektor { background: #4e342e; }
+        .col-ps { background: #00695c; }
+        .col-coolant { background: #1b5e20; }
+        .col-rem { background: #b71c1c; }
+        .col-status { background: #37474f; }
+        .col-realisasi { background: #0d47a1; }
+        tbody td { border: 1px solid #e0e0e0; padding: 4px; text-align: center; color: #333; }
+        tbody tr:nth-child(even) { background: #f5f5f5; }
+        tbody tr:nth-child(odd) { background: #fff; }
+        tbody tr:hover { background: #e3f2fd; }
+        .odometer-cell { font-weight: bold; background: #fff9c4; color: #000; }
+        input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; text-align: center; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #4caf50; }
+        .checkbox-done { accent-color: #4caf50; }
+        .checkbox-pending { accent-color: #f44336; }
+        .manual-row { background: #fff3e0 !important; }
+        .manual-row td { border: 2px dashed #ff9800; }
+        .footer-info { padding: 15px; background: #16213e; border-radius: 0 0 10px 10px; margin-top: 10px; }
+        .footer-info h3 { color: #ffd700; margin-bottom: 10px; font-size: 14px; }
+        .footer-info ul { color: #b0bec5; font-size: 11px; padding-left: 20px; }
+        .footer-info li { margin-bottom: 5px; }
+        .vin-section { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; padding: 15px; background: #0f3460; border-radius: 8px; }
+        .vin-section label { color: #ffd700; font-size: 11px; font-weight: bold; display: block; margin-bottom: 5px; }
+        .vin-section input { width: 100%; padding: 8px; border: 1px solid #455a64; border-radius: 4px; background: #1a1a2e; color: #fff; font-size: 12px; }
+        .vin-section input:focus { outline: none; border-color: #ffd700; }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: bold; z-index: 1000; display: none; animation: slideIn 0.3s ease; font-size: 14px; max-width: 90%; }
+        .notification.success { background: #4caf50; }
+        .notification.error { background: #f44336; }
+        .notification.info { background: #2196f3; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .legend { display: flex; gap: 15px; padding: 10px 15px; background: #16213e; flex-wrap: wrap; font-size: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 15px; height: 15px; border-radius: 3px; }
+        .editable { background: #fff9c4; }
+        .vehicle-selector { padding: 10px 15px; background: #0f3460; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .vehicle-selector label { color: #ffd700; font-weight: bold; font-size: 12px; }
+        .vehicle-selector select { padding: 8px; border: 1px solid #455a64; border-radius: 4px; background: #1a1a2e; color: #fff; font-size: 12px; }
+        .vehicle-selector input { padding: 8px; border: 1px solid #455a64; border-radius: 4px; background: #1a1a2e; color: #fff; font-size: 12px; flex: 1; min-width: 200px; }
+        .connection-status { padding: 8px 15px; background: #16213e; font-size: 11px; display: flex; align-items: center; gap: 8px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #f44336; }
+        .status-dot.connected { background: #4caf50; }
+        .status-dot.connecting { background: #ff9800; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 16px; }
+            .header h2 { font-size: 14px; }
+            .toolbar { padding: 10px; }
+            .toolbar button { padding: 6px 10px; font-size: 11px; }
+            .vin-section { grid-template-columns: 1fr; }
+        }
+        @media print {
+            @page { size: A4 landscape; margin: 8mm; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: white !important; color: black !important; padding: 0 !important; margin: 0 !important; font-size: 6px !important; }
+            .toolbar, .btn-delete, .notification, .edit-hint, .legend, .print-range-selector, .connection-status, .vehicle-selector, .footer-info h3, .footer-info ul, input[type="checkbox"]:not(:checked) { display: none !important; }
+            .header { background: #0d47a1 !important; padding: 6px !important; border-radius: 0 !important; margin-bottom: 3px !important; }
+            .header h1 { font-size: 12px !important; color: #ffd700 !important; }
+            .header h2 { font-size: 10px !important; color: white !important; margin: 2px 0 !important; padding: 2px !important; background: rgba(255,255,255,0.15) !important; border: none !important; }
+            .header p { font-size: 7px !important; color: #b0bec5 !important; }
+            .table-container { border-radius: 0 !important; overflow: visible !important; }
+            table { font-size: 5px !important; min-width: auto !important; width: 100% !important; }
+            thead th { background: #0d47a1 !important; color: white !important; padding: 1.5px 1px !important; font-size: 4.5px !important; }
+            thead th .sub-header { font-size: 3.5px !important; color: #e0e0e0 !important; }
+            tbody td { padding: 1px !important; font-size: 5px !important; }
+            .odometer-cell { font-size: 5.5px !important; }
+            input[type="checkbox"] { width: 6px !important; height: 6px !important; }
+            input[type="text"] { font-size: 4.5px !important; padding: 0.5px !important; border: none !important; background: transparent !important; }
+            .footer-info { padding: 4px !important; background: #f5f5f5 !important; }
+            .vin-section { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 3px !important; padding: 4px !important; background: #f5f5f5 !important; }
+            .vin-section label { color: #0d47a1 !important; font-size: 5px !important; }
+            .vin-section input { padding: 1px !important; font-size: 6px !important; border: 0.3px solid #ccc !important; background: white !important; color: black !important; }
+            .manual-row { display: none !important; }
+            tbody tr:nth-child(even) { background: #f0f0f0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚙️ Preventive Maintenance Schedule</h1>
+        <h2 id="vehicleTitle" contenteditable="true" spellcheck="false">CHEVROLET CAPTIVA C140 2.0 DIESEL</h2>
+        <p class="edit-hint">💡 Klik teks di atas untuk mengedit nama kendaraan</p>
+        <p>Keep It Healthy • Keep It Reliable • Go Further</p>
+    </div>
+
+    <div class="vehicle-selector">
+        <label for="vehicleType">Pilih Tipe:</label>
+        <select id="vehicleType" onchange="updateVehicleTitle()">
+            <option value="custom">Custom / Manual Input</option>
+            <option value="chevrolet-captiva-c140-2.0-diesel">Chevrolet Captiva C140 2.0 Diesel</option>
+            <option value="toyota-avanza-1.5">Toyota Avanza 1.5</option>
+            <option value="honda-crv-1.5-turbo">Honda CR-V 1.5 Turbo</option>
+            <option value="mitsubishi-pajero-sport-2.4">Mitsubishi Pajero Sport 2.4</option>
+            <option value="nissan-x-trail-2.0">Nissan X-Trail 2.0</option>
+            <option value="mazda-cx-5-2.0">Mazda CX-5 2.0</option>
+            <option value="hyundai-tucson-2.0">Hyundai Tucson 2.0</option>
+            <option value="kia-seltos-1.5">Kia Seltos 1.5</option>
+        </select>
+        <input type="text" id="customVehicleName" placeholder="Atau ketik nama kendaraan manual..." oninput="updateVehicleTitle()">
+    </div>
+
+    <div class="connection-status">
+        <div class="status-dot" id="connectionDot"></div>
+        <span id="connectionText">Google Sheets: Belum terhubung</span>
+        <span style="margin-left:auto; color:#b0bec5; font-size:11px;" id="lastSaved">Belum disimpan</span>
+    </div>
+
+    <div class="print-range-selector" id="printRangeSelector">
+        <label style="color:#ffd700; font-weight:bold; font-size:12px;">🖨️ Pilih Range Print (A4 Landscape):</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:8px;">
+            <div>
+                <label style="color:#b0bec5; font-size:10px; display:block;">Dari (km):</label>
+                <select id="printFrom">
+                    <option value="150000">150.000</option>
+                    <option value="200000">200.000</option>
+                    <option value="250000">250.000</option>
+                    <option value="300000">300.000</option>
+                    <option value="350000">350.000</option>
+                </select>
+            </div>
+            <div>
+                <label style="color:#b0bec5; font-size:10px; display:block;">Sampai (km):</label>
+                <select id="printTo">
+                    <option value="200000">200.000</option>
+                    <option value="250000">250.000</option>
+                    <option value="300000">300.000</option>
+                    <option value="350000">350.000</option>
+                    <option value="400000" selected>400.000</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:5px; align-items:flex-end;">
+                <button class="btn-print" onclick="printSelectedRange()" style="padding:6px 12px; font-size:11px;">🖨️ Print Range</button>
+                <button class="btn-edit" onclick="document.getElementById('printRangeSelector').style.display='none'" style="padding:6px 12px; font-size:11px;">✕ Tutup</button>
+            </div>
+        </div>
+        <p style="color:#b0bec5; font-size:10px; margin-top:5px;">💡 Tips: Pilih range 150.000-250.000 (21 baris) agar muat 1 lembar A4</p>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn-save" onclick="saveData()">💾 Simpan</button>
+        <button class="btn-cloud" onclick="loadFromGoogleSheets()">☁️ Load dari Cloud</button>
+        <button class="btn-edit" onclick="toggleEdit()">✏️ Edit</button>
+        <button class="btn-print" onclick="showPrintOptions()">🖨️ Print</button>
+        <button class="btn-add-row" onclick="addManualRow()">➕ Tambah Baris</button>
+        <button class="btn-save" onclick="exportToCSV()" style="background:#607d8b;"> Export CSV</button>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#2e7d32;"></div> Oli Engine (5.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1565c0;"></div> Filter Solar (10.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#e65100;"></div> Filter Udara (25.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#6a1b9a;"></div> Filter AC (25.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#c62828;"></div> ATF (25.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#4e342e;"></div> Injektor (100.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#00695c;"></div> Power Steering (100.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#1b5e20;"></div> Coolant (100.000 km)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#b71c1c;"></div> Minyak Rem (100.000 km)</div>
+    </div>
+
+    <div class="table-container">
+        <table id="maintenanceTable">
+            <thead>
+                <tr>
+                    <th class="col-odometer" rowspan="2">JADWAL<br>ODOMETER<br>(km)</th>
+                    <th class="col-oli" rowspan="2">OLI ENGINE<br>+ FILTER OLI<br><span class="sub-header">Setiap 5.000 km</span></th>
+                    <th class="col-solar" rowspan="2">FILTER<br>SOLAR<br><span class="sub-header">Setiap 10.000 km</span></th>
+                    <th class="col-udara" rowspan="2">FILTER<br>UDARA<br><span class="sub-header">Setiap 25.000 km</span></th>
+                    <th class="col-ac" rowspan="2">FILTER<br>AC CABIN<br><span class="sub-header">Setiap 25.000 km</span></th>
+                    <th class="col-atf" rowspan="2">ATF<br>(Transmisi)<br><span class="sub-header">Setiap 25.000 km</span></th>
+                    <th class="col-injektor" rowspan="2">INJEKTOR<br>(Kalibrasi)<br><span class="sub-header">Setiap 100.000 km</span></th>
+                    <th class="col-ps" rowspan="2">POWER<br>STEERING<br><span class="sub-header">Setiap 100.000 km</span></th>
+                    <th class="col-coolant" rowspan="2">COOLANT<br>RADIATOR<br><span class="sub-header">Setiap 100.000 km</span></th>
+                    <th class="col-rem" rowspan="2">MINYAK<br>REM<br><span class="sub-header">Setiap 100.000 km</span></th>
+                    <th class="col-status" colspan="2">STATUS</th>
+                    <th class="col-realisasi" colspan="3">REALISASI PEKERJAAN</th>
+                    <th rowspan="2" style="background:#37474f;">AKSI</th>
+                </tr>
+                <tr>
+                    <th class="col-status" style="background:#4caf50;">SUDAH ✓</th>
+                    <th class="col-status" style="background:#f44336;">BELUM ✗</th>
+                    <th class="col-realisasi">TANGGAL</th>
+                    <th class="col-realisasi">ODOMETER<br>SAT DILAKUKAN</th>
+                    <th class="col-realisasi">CATATAN</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="manual-row" data-manual="true" data-row-index="0">
+                    <td><input type="text" class="editable" name="odometer_manual_0" id="odometer_manual_0" placeholder="Odometer (km)" aria-label="Odometer manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="oli_manual_0" id="oli_manual_0" aria-label="Oli manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="solar_manual_0" id="solar_manual_0" aria-label="Solar manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="udara_manual_0" id="udara_manual_0" aria-label="Udara manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="ac_manual_0" id="ac_manual_0" aria-label="AC manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="atf_manual_0" id="atf_manual_0" aria-label="ATF manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="injektor_manual_0" id="injektor_manual_0" aria-label="Injektor manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="ps_manual_0" id="ps_manual_0" aria-label="PS manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="coolant_manual_0" id="coolant_manual_0" aria-label="Coolant manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="rem_manual_0" id="rem_manual_0" aria-label="Rem manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="status_done_manual_0" id="status_done_manual_0" aria-label="Status sudah manual 0"></td>
+                    <td><input type="checkbox" class="checkbox-pending" name="status_pending_manual_0" id="status_pending_manual_0" aria-label="Status belum manual 0"></td>
+                    <td><input type="text" name="tanggal_manual_0" id="tanggal_manual_0" placeholder="DD-MM-YYYY" aria-label="Tanggal manual 0"></td>
+                    <td><input type="text" name="odo_done_manual_0" id="odo_done_manual_0" placeholder="km" aria-label="Odo done manual 0"></td>
+                    <td><input type="text" name="catatan_manual_0" id="catatan_manual_0" placeholder="Catatan..." aria-label="Catatan manual 0"></td>
+                    <td><button class="btn-delete" onclick="deleteRow(this)" aria-label="Hapus baris">🗑️</button></td>
+                </tr>
+                <tr class="manual-row" data-manual="true" data-row-index="1">
+                    <td><input type="text" class="editable" name="odometer_manual_1" id="odometer_manual_1" placeholder="Odometer (km)" aria-label="Odometer manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="oli_manual_1" id="oli_manual_1" aria-label="Oli manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="solar_manual_1" id="solar_manual_1" aria-label="Solar manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="udara_manual_1" id="udara_manual_1" aria-label="Udara manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="ac_manual_1" id="ac_manual_1" aria-label="AC manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="atf_manual_1" id="atf_manual_1" aria-label="ATF manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="injektor_manual_1" id="injektor_manual_1" aria-label="Injektor manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="ps_manual_1" id="ps_manual_1" aria-label="PS manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="coolant_manual_1" id="coolant_manual_1" aria-label="Coolant manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="rem_manual_1" id="rem_manual_1" aria-label="Rem manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="status_done_manual_1" id="status_done_manual_1" aria-label="Status sudah manual 1"></td>
+                    <td><input type="checkbox" class="checkbox-pending" name="status_pending_manual_1" id="status_pending_manual_1" aria-label="Status belum manual 1"></td>
+                    <td><input type="text" name="tanggal_manual_1" id="tanggal_manual_1" placeholder="DD-MM-YYYY" aria-label="Tanggal manual 1"></td>
+                    <td><input type="text" name="odo_done_manual_1" id="odo_done_manual_1" placeholder="km" aria-label="Odo done manual 1"></td>
+                    <td><input type="text" name="catatan_manual_1" id="catatan_manual_1" placeholder="Catatan..." aria-label="Catatan manual 1"></td>
+                    <td><button class="btn-delete" onclick="deleteRow(this)" aria-label="Hapus baris">🗑️</button></td>
+                </tr>
+                <tr class="manual-row" data-manual="true" data-row-index="2">
+                    <td><input type="text" class="editable" name="odometer_manual_2" id="odometer_manual_2" placeholder="Odometer (km)" aria-label="Odometer manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="oli_manual_2" id="oli_manual_2" aria-label="Oli manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="solar_manual_2" id="solar_manual_2" aria-label="Solar manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="udara_manual_2" id="udara_manual_2" aria-label="Udara manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="ac_manual_2" id="ac_manual_2" aria-label="AC manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="atf_manual_2" id="atf_manual_2" aria-label="ATF manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="injektor_manual_2" id="injektor_manual_2" aria-label="Injektor manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="ps_manual_2" id="ps_manual_2" aria-label="PS manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="coolant_manual_2" id="coolant_manual_2" aria-label="Coolant manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="rem_manual_2" id="rem_manual_2" aria-label="Rem manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-done" name="status_done_manual_2" id="status_done_manual_2" aria-label="Status sudah manual 2"></td>
+                    <td><input type="checkbox" class="checkbox-pending" name="status_pending_manual_2" id="status_pending_manual_2" aria-label="Status belum manual 2"></td>
+                    <td><input type="text" name="tanggal_manual_2" id="tanggal_manual_2" placeholder="DD-MM-YYYY" aria-label="Tanggal manual 2"></td>
+                    <td><input type="text" name="odo_done_manual_2" id="odo_done_manual_2" placeholder="km" aria-label="Odo done manual 2"></td>
+                    <td><input type="text" name="catatan_manual_2" id="catatan_manual_2" placeholder="Catatan..." aria-label="Catatan manual 2"></td>
+                    <td><button class="btn-delete" onclick="deleteRow(this)" aria-label="Hapus baris">🗑️</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-info">
+        <h3> CATATAN PENTING:</h3>
+        <ul>
+            <li>Interval berdasarkan kondisi normal pemakaian.</li>
+            <li>Gunakan suku cadang dan fluida berkualitas sesuai spesifikasi.</li>
+            <li>Jadwal dapat disesuaikan dengan kondisi pemakaian (berat, medan ekstrem, dll).</li>
+            <li>Pastikan setiap pekerjaan dicatat dan diberi tanda pada kolom status.</li>
+            <li>Simpan bukti pekerjaan (invoice/foto) sebagai dokumentasi.</li>
+            <li>Perawatan rutin menjaga performa, efisiensi, dan umur panjang kendaraan.</li>
+        </ul>
+
+        <div class="vin-section">
+            <div>
+                <label for="vinNumber">NOMOR RANGKA (VIN)</label>
+                <input type="text" id="vinNumber" name="vinNumber" placeholder="Masukkan Nomor Rangka...">
+            </div>
+            <div>
+                <label for="ownerName">NAMA PEMILIK</label>
+                <input type="text" id="ownerName" name="ownerName" placeholder="Masukkan Nama Pemilik...">
+            </div>
+            <div>
+                <label for="plateNumber">NO. POLISI</label>
+                <input type="text" id="plateNumber" name="plateNumber" placeholder="Masukkan No. Polisi...">
+            </div>
+            <div>
+                <label for="vehicleModel">MODEL KENDARAAN</label>
+                <input type="text" id="vehicleModel" name="vehicleModel" placeholder="Masukkan Model Kendaraan..." oninput="syncVehicleTitle()">
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // ============================================
+        // ⚠️️⚠️ GANTI URL DI BAWAH INI ⚠️⚠️⚠️
+        // Paste URL Web App Google Apps Script kamu di sini
+        // Contoh: https://script.google.com/macros/s/AKfycbxXXXXXXX/exec
+        // ============================================
+        var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPUgBYEOvV6nCzpLahEMUa4hMkj5rtRhynnyUvpWiCqRn87wpK_IsQ33IYiwSy7tiAkw/exec';
+
+        var editMode = false;
+        var currentVehicleId = null;
+        var rowIndex = 3;
+
+        function generateScheduleRows() {
+            var tbody = document.getElementById('tableBody');
+            var startOdo = 150000;
+            var endOdo = 400000;
+            var step = 5000;
+
+            for (var odo = startOdo; odo <= endOdo; odo += step) {
+                var tr = document.createElement('tr');
+                tr.dataset.odometer = odo;
+                tr.dataset.rowIndex = rowIndex;
+
+                var oliCheck = true;
+                var solarCheck = (odo % 10000 === 0);
+                var udaraCheck = (odo % 25000 === 0);
+                var acCheck = (odo % 25000 === 0);
+                var atfCheck = (odo % 25000 === 0);
+                var injektorCheck = [200000, 300000, 400000].indexOf(odo) !== -1;
+                var psCheck = [250000, 350000].indexOf(odo) !== -1;
+                var coolantCheck = [250000, 350000].indexOf(odo) !== -1;
+                var remCheck = [250000, 350000].indexOf(odo) !== -1;
+
+                var r = rowIndex;
+                var odoFormatted = odo.toLocaleString('id-ID');
+                
+                tr.innerHTML = 
+                    '<td class="odometer-cell">' + odoFormatted + '</td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="oli_' + r + '" id="oli_' + r + '" aria-label="Oli Engine ' + odoFormatted + '" ' + (oliCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="solar_' + r + '" id="solar_' + r + '" aria-label="Filter Solar ' + odoFormatted + '" ' + (solarCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="udara_' + r + '" id="udara_' + r + '" aria-label="Filter Udara ' + odoFormatted + '" ' + (udaraCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="ac_' + r + '" id="ac_' + r + '" aria-label="Filter AC ' + odoFormatted + '" ' + (acCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="atf_' + r + '" id="atf_' + r + '" aria-label="ATF ' + odoFormatted + '" ' + (atfCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="injektor_' + r + '" id="injektor_' + r + '" aria-label="Injektor ' + odoFormatted + '" ' + (injektorCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="ps_' + r + '" id="ps_' + r + '" aria-label="Power Steering ' + odoFormatted + '" ' + (psCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="coolant_' + r + '" id="coolant_' + r + '" aria-label="Coolant ' + odoFormatted + '" ' + (coolantCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="rem_' + r + '" id="rem_' + r + '" aria-label="Minyak Rem ' + odoFormatted + '" ' + (remCheck ? 'checked' : '') + '></td>' +
+                    '<td><input type="checkbox" class="checkbox-done" name="status_done_' + r + '" id="status_done_' + r + '" aria-label="Status Sudah ' + odoFormatted + '"></td>' +
+                    '<td><input type="checkbox" class="checkbox-pending" name="status_pending_' + r + '" id="status_pending_' + r + '" aria-label="Status Belum ' + odoFormatted + '"></td>' +
+                    '<td><input type="text" name="tanggal_' + r + '" id="tanggal_' + r + '" placeholder="DD-MM-YYYY" aria-label="Tanggal ' + odoFormatted + '"></td>' +
+                    '<td><input type="text" name="odo_done_' + r + '" id="odo_done_' + r + '" placeholder="km" aria-label="Odometer saat dilakukan ' + odoFormatted + '"></td>' +
+                    '<td><input type="text" name="catatan_' + r + '" id="catatan_' + r + '" placeholder="Catatan..." aria-label="Catatan ' + odoFormatted + '"></td>' +
+                    '<td><button class="btn-delete" onclick="resetRow(this)" title="Reset baris ' + odoFormatted + '" aria-label="Reset baris ' + odoFormatted + '">🔄</button></td>';
+                
+                tbody.appendChild(tr);
+                rowIndex++;
+            }
+        }
+
+        function toggleEdit() {
+            editMode = !editMode;
+            var inputs = document.querySelectorAll('#tableBody input');
+            for (var i = 0; i < inputs.length; i++) {
+                if (inputs[i].type === 'checkbox' || inputs[i].type === 'text') {
+                    inputs[i].disabled = !editMode;
+                }
+            }
+            var btn = document.querySelector('.btn-edit');
+            if (editMode) {
+                btn.textContent = '🔒 Kunci';
+                btn.style.background = '#f44336';
+                showNotification('✏️ Mode Edit Aktif', 'info');
+            } else {
+                btn.textContent = '✏️ Edit';
+                btn.style.background = '#ff9800';
+                showNotification('🔒 Mode Edit Nonaktif', 'info');
+            }
+        }
+
+        function updateVehicleTitle() {
+            var select = document.getElementById('vehicleType');
+            var customInput = document.getElementById('customVehicleName');
+            var title = document.getElementById('vehicleTitle');
+            var modelInput = document.getElementById('vehicleModel');
+
+            if (select.value === 'custom') {
+                if (customInput.value.trim()) {
+                    title.textContent = customInput.value.toUpperCase();
+                    modelInput.value = customInput.value;
+                }
+            } else {
+                var vehicleName = select.options[select.selectedIndex].text;
+                title.textContent = vehicleName.toUpperCase();
+                modelInput.value = vehicleName;
+                customInput.value = '';
+            }
+        }
+
+        function syncVehicleTitle() {
+            var modelInput = document.getElementById('vehicleModel');
+            var title = document.getElementById('vehicleTitle');
+            var customInput = document.getElementById('customVehicleName');
+            var select = document.getElementById('vehicleType');
+
+            if (modelInput.value.trim()) {
+                title.textContent = modelInput.value.toUpperCase();
+                customInput.value = modelInput.value;
+                select.value = 'custom';
+            }
+        }
+
+        function sendToGoogleSheets(data) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_KAMU_DI_SINI' || GOOGLE_SCRIPT_URL.indexOf('script.google.com') === -1) {
+                showNotification('⚠️ URL Google Sheets belum disetting! Data hanya disimpan lokal.', 'error');
+                return false;
+            }
+
+            var dot = document.getElementById('connectionDot');
+            var text = document.getElementById('connectionText');
+            dot.className = 'status-dot connecting';
+            text.textContent = 'Google Sheets: Mengirim...';
+
+            try {
+                var payload = {
+                    action: 'saveAll',
+                    namaKendaraan: document.getElementById('vehicleTitle').textContent,
+                    vin: document.getElementById('vinNumber').value,
+                    noPolisi: document.getElementById('plateNumber').value,
+                    namaPemilik: document.getElementById('ownerName').value,
+                    tipe: document.getElementById('vehicleType').value,
+                    vehicleId: currentVehicleId,
+                    rows: data.rows
+                };
+
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(function() {
+                    dot.className = 'status-dot connected';
+                    text.textContent = 'Google Sheets: Terhubung ✓';
+                    showNotification('✅ Data terkirim ke Google Sheets!', 'success');
+                }).catch(function(error) {
+                    dot.className = 'status-dot';
+                    text.textContent = 'Google Sheets: Gagal terhubung';
+                    showNotification('❌ Gagal: ' + error.message, 'error');
+                });
+                return true;
+            } catch (error) {
+                dot.className = 'status-dot';
+                text.textContent = 'Google Sheets: Gagal terhubung';
+                showNotification(' Gagal: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        function loadFromGoogleSheets() {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_KAMU_DI_SINI' || GOOGLE_SCRIPT_URL.indexOf('script.google.com') === -1) {
+                showNotification('⚠️ URL Google Sheets belum disetting!', 'error');
+                return;
+            }
+
+            var dot = document.getElementById('connectionDot');
+            var text = document.getElementById('connectionText');
+            dot.className = 'status-dot connecting';
+            text.textContent = 'Google Sheets: Memuat...';
+
+            fetch(GOOGLE_SCRIPT_URL + '?action=getVehicles')
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    if (result.status === 'success' && result.data && result.data.length > 0) {
+                        var vehicles = result.data;
+                        showNotification('📂 ' + vehicles.length + ' kendaraan dimuat!', 'success');
+
+                        var firstVehicle = vehicles[vehicles.length - 1];
+                        document.getElementById('vehicleTitle').textContent = firstVehicle['Nama Kendaraan'] || '';
+                        document.getElementById('vinNumber').value = firstVehicle['VIN'] || '';
+                        document.getElementById('plateNumber').value = firstVehicle['No. Polisi'] || '';
+                        document.getElementById('ownerName').value = firstVehicle['Nama Pemilik'] || '';
+                        document.getElementById('vehicleModel').value = firstVehicle['Nama Kendaraan'] || '';
+                        currentVehicleId = firstVehicle['ID'];
+
+                        dot.className = 'status-dot connected';
+                        text.textContent = 'Google Sheets: Terhubung ✓';
+                    } else {
+                        showNotification('📭 Belum ada data di Google Sheets', 'info');
+                        dot.className = 'status-dot';
+                        text.textContent = 'Google Sheets: Terhubung (belum ada data)';
+                    }
+                })
+                .catch(function(error) {
+                    dot.className = 'status-dot';
+                    text.textContent = 'Google Sheets: Gagal terhubung';
+                    showNotification('❌ Gagal load: ' + error.message, 'error');
+                });
+        }
+
+        function saveData() {
+            var data = {
+                vehicleTitle: document.getElementById('vehicleTitle').textContent,
+                vin: document.getElementById('vinNumber').value,
+                owner: document.getElementById('ownerName').value,
+                plate: document.getElementById('plateNumber').value,
+                model: document.getElementById('vehicleModel').value,
+                vehicleType: document.getElementById('vehicleType').value,
+                customVehicleName: document.getElementById('customVehicleName').value,
+                rows: []
+            };
+
+            var rows = document.querySelectorAll('#tableBody tr');
+            for (var r = 0; r < rows.length; r++) {
+                var row = rows[r];
+                var cells = row.querySelectorAll('td');
+                var rowData = {
+                    odometer: cells[0].querySelector('input') ? cells[0].querySelector('input').value : cells[0].textContent,
+                    oli: cells[1].querySelector('input').checked,
+                    solar: cells[2].querySelector('input').checked,
+                    udara: cells[3].querySelector('input').checked,
+                    ac: cells[4].querySelector('input').checked,
+                    atf: cells[5].querySelector('input').checked,
+                    injektor: cells[6].querySelector('input').checked,
+                    ps: cells[7].querySelector('input').checked,
+                    coolant: cells[8].querySelector('input').checked,
+                    rem: cells[9].querySelector('input').checked,
+                    statusDone: cells[10].querySelector('input').checked,
+                    statusPending: cells[11].querySelector('input').checked,
+                    tanggal: cells[12].querySelector('input').value || '',
+                    odometerDone: cells[13].querySelector('input').value || '',
+                    catatan: cells[14].querySelector('input').value || '',
+                    isManual: row.dataset.manual === 'true'
+                };
+                data.rows.push(rowData);
+            }
+
+            localStorage.setItem('maintenance_data', JSON.stringify(data));
+            sendToGoogleSheets(data);
+
+            var now = new Date();
+            document.getElementById('lastSaved').textContent = 'Terakhir disimpan: ' + now.toLocaleString('id-ID');
+        }
+
+        function loadData() {
+            var saved = localStorage.getItem('maintenance_data');
+            if (saved) {
+                var data = JSON.parse(saved);
+                document.getElementById('vehicleTitle').textContent = data.vehicleTitle || 'CHEVROLET CAPTIVA C140 2.0 DIESEL';
+                document.getElementById('vinNumber').value = data.vin || '';
+                document.getElementById('ownerName').value = data.owner || '';
+                document.getElementById('plateNumber').value = data.plate || '';
+                document.getElementById('vehicleModel').value = data.model || '';
+                document.getElementById('vehicleType').value = data.vehicleType || 'custom';
+                document.getElementById('customVehicleName').value = data.customVehicleName || '';
+
+                var now = new Date();
+                document.getElementById('lastSaved').textContent = 'Terakhir dimuat: ' + now.toLocaleString('id-ID');
+                showNotification('📂 Data lokal dimuat!', 'info');
+            }
+        }
+
+        function showPrintOptions() {
+            var selector = document.getElementById('printRangeSelector');
+            selector.style.display = selector.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function printSelectedRange() {
+            var fromKm = parseInt(document.getElementById('printFrom').value);
+            var toKm = parseInt(document.getElementById('printTo').value);
+
+            if (fromKm >= toKm) {
+                showNotification('⚠️ Nilai "Dari" harus lebih kecil dari "Sampai"!', 'error');
+                return;
+            }
+
+            var rows = document.querySelectorAll('#tableBody tr');
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var odoCell = row.querySelector('.odometer-cell');
+                if (odoCell) {
+                    var odoValue = parseInt(odoCell.textContent.replace(/\./g, ''));
+                    if (odoValue < fromKm || odoValue > toKm) {
+                        row.style.display = 'none';
+                        row.dataset.hiddenForPrint = 'true';
+                    }
+                }
+            }
+
+            document.body.setAttribute('data-print-date', new Date().toLocaleString('id-ID'));
+            document.body.setAttribute('data-vehicle', document.getElementById('vehicleTitle').textContent);
+
+            setTimeout(function() {
+                window.print();
+                setTimeout(function() {
+                    for (var i = 0; i < rows.length; i++) {
+                        if (rows[i].dataset.hiddenForPrint === 'true') {
+                            rows[i].style.display = '';
+                            delete rows[i].dataset.hiddenForPrint;
+                        }
+                    }
+                }, 500);
+            }, 300);
+        }
+
+        function addManualRow() {
+            var tbody = document.getElementById('tableBody');
+            var tr = document.createElement('tr');
+            tr.className = 'manual-row';
+            tr.dataset.manual = 'true';
+            tr.dataset.rowIndex = rowIndex;
+            
+            var r = rowIndex;
+            tr.innerHTML = 
+                '<td><input type="text" class="editable" name="odometer_manual_' + r + '" id="odometer_manual_' + r + '" placeholder="Odometer (km)" aria-label="Odometer manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="oli_manual_' + r + '" id="oli_manual_' + r + '" aria-label="Oli manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="solar_manual_' + r + '" id="solar_manual_' + r + '" aria-label="Solar manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="udara_manual_' + r + '" id="udara_manual_' + r + '" aria-label="Udara manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="ac_manual_' + r + '" id="ac_manual_' + r + '" aria-label="AC manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="atf_manual_' + r + '" id="atf_manual_' + r + '" aria-label="ATF manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="injektor_manual_' + r + '" id="injektor_manual_' + r + '" aria-label="Injektor manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="ps_manual_' + r + '" id="ps_manual_' + r + '" aria-label="PS manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="coolant_manual_' + r + '" id="coolant_manual_' + r + '" aria-label="Coolant manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="rem_manual_' + r + '" id="rem_manual_' + r + '" aria-label="Rem manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-done" name="status_done_manual_' + r + '" id="status_done_manual_' + r + '" aria-label="Status sudah manual ' + r + '"></td>' +
+                '<td><input type="checkbox" class="checkbox-pending" name="status_pending_manual_' + r + '" id="status_pending_manual_' + r + '" aria-label="Status belum manual ' + r + '"></td>' +
+                '<td><input type="text" name="tanggal_manual_' + r + '" id="tanggal_manual_' + r + '" placeholder="DD-MM-YYYY" aria-label="Tanggal manual ' + r + '"></td>' +
+                '<td><input type="text" name="odo_done_manual_' + r + '" id="odo_done_manual_' + r + '" placeholder="km" aria-label="Odo done manual ' + r + '"></td>' +
+                '<td><input type="text" name="catatan_manual_' + r + '" id="catatan_manual_' + r + '" placeholder="Catatan..." aria-label="Catatan manual ' + r + '"></td>' +
+                '<td><button class="btn-delete" onclick="deleteRow(this)" aria-label="Hapus baris manual ' + r + '">🗑️</button></td>';
+            
+            tbody.insertBefore(tr, tbody.firstChild);
+            rowIndex++;
+            showNotification('➕ Baris manual ditambahkan!', 'success');
+        }
+
+        function deleteRow(btn) {
+            if (confirm('Hapus baris ini?')) {
+                btn.closest('tr').remove();
+                showNotification('🗑️ Baris dihapus!', 'info');
+            }
+        }
+
+        function resetRow(btn) {
+            var row = btn.closest('tr');
+            var checkboxes = row.querySelectorAll('input[type="checkbox"]');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = false;
+            }
+            var inputs = row.querySelectorAll('input[type="text"]');
+            for (var i = 0; i < inputs.length; i++) {
+                inputs[i].value = '';
+            }
+            showNotification('🔄 Baris direset!', 'info');
+        }
+
+        function exportToCSV() {
+            var vehicleTitle = document.getElementById('vehicleTitle').textContent;
+            var csv = 'Vehicle: ' + vehicleTitle + '\n\n';
+            csv += 'Odometer,Oli,Solar,Udara,AC,ATF,Injektor,PS,Coolant,Rem,Sudah,Belum,Tanggal,Odo_Done,Catatan\n';
+
+            var rows = document.querySelectorAll('#tableBody tr');
+            for (var r = 0; r < rows.length; r++) {
+                var row = rows[r];
+                var cells = row.querySelectorAll('td');
+                var odo = cells[0].querySelector('input') ? cells[0].querySelector('input').value : cells[0].textContent;
+                var values = [];
+                for (var i = 1; i <= 11; i++) {
+                    values.push(cells[i].querySelector('input').checked ? 'Ya' : 'Tidak');
+                }
+                values.push(cells[12].querySelector('input').value || '');
+                values.push(cells[13].querySelector('input').value || '');
+                values.push(cells[14].querySelector('input').value || '');
+                csv += odo + ',' + values.join(',') + '\n';
+            }
+
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'maintenance_' + vehicleTitle.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            showNotification(' CSV diexport!', 'success');
+        }
+
+        function showNotification(message, type) {
+            var notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.className = 'notification ' + type;
+            notif.style.display = 'block';
+            setTimeout(function() { notif.style.display = 'none'; }, 3000);
+        }
+
+        setInterval(function() {
+            if (editMode) { saveData(); }
+        }, 30000);
+
+        document.getElementById('vehicleTitle').addEventListener('blur', function() {
+            document.getElementById('vehicleModel').value = this.textContent;
+        });
+
+        document.getElementById('vehicleTitle').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+        });
+
+        window.addEventListener('load', function() {
+            generateScheduleRows();
+            loadData();
+        });
+    </script>
+</body>
+</html>
