@@ -355,22 +355,23 @@ var step = 5000;
                 var odoFormatted = odo.toLocaleString('id-ID');
                 
                 tr.innerHTML = 
-                    '<td class="odometer-cell">' + odoFormatted + '</td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="oli_' + r + '" id="oli_' + r + '" aria-label="Oli Engine ' + odoFormatted + '" ' + (oliCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="solar_' + r + '" id="solar_' + r + '" aria-label="Filter Solar ' + odoFormatted + '" ' + (solarCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="udara_' + r + '" id="udara_' + r + '" aria-label="Filter Udara ' + odoFormatted + '" ' + (udaraCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="ac_' + r + '" id="ac_' + r + '" aria-label="Filter AC ' + odoFormatted + '" ' + (acCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="atf_' + r + '" id="atf_' + r + '" aria-label="ATF ' + odoFormatted + '" ' + (atfCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="injektor_' + r + '" id="injektor_' + r + '" aria-label="Injektor ' + odoFormatted + '" ' + (injektorCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="ps_' + r + '" id="ps_' + r + '" aria-label="Power Steering ' + odoFormatted + '" ' + (psCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="coolant_' + r + '" id="coolant_' + r + '" aria-label="Coolant ' + odoFormatted + '" ' + (coolantCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="rem_' + r + '" id="rem_' + r + '" aria-label="Minyak Rem ' + odoFormatted + '" ' + (remCheck ? 'checked' : '') + '></td>' +
-                    '<td><input type="checkbox" class="checkbox-done" name="status_done_' + r + '" id="status_done_' + r + '" aria-label="Status Sudah ' + odoFormatted + '"></td>' +
-                    '<td><input type="checkbox" class="checkbox-pending" name="status_pending_' + r + '" id="status_pending_' + r + '" aria-label="Status Belum ' + odoFormatted + '"></td>' +
-                    '<td><input type="text" name="tanggal_' + r + '" id="tanggal_' + r + '" placeholder="DD-MM-YYYY" aria-label="Tanggal ' + odoFormatted + '"></td>' +
-                    '<td><input type="text" name="odo_done_' + r + '" id="odo_done_' + r + '" placeholder="km" aria-label="Odometer saat dilakukan ' + odoFormatted + '"></td>' +
-                    '<td><input type="text" name="catatan_' + r + '" id="catatan_' + r + '" placeholder="Catatan..." aria-label="Catatan ' + odoFormatted + '"></td>' +
-                    '<td><button class="btn-delete" onclick="resetRow(this)" title="Reset baris ' + odoFormatted + '" aria-label="Reset baris ' + odoFormatted + '">🔄</button></td>';
+                    tr.innerHTML = 
+    '<td class="odometer-cell">' + odoFormatted + '</td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="oli_' + r + '" id="oli_' + r + '" aria-label="Oli Engine ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="solar_' + r + '" id="solar_' + r + '" aria-label="Filter Solar ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="udara_' + r + '" id="udara_' + r + '" aria-label="Filter Udara ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="ac_' + r + '" id="ac_' + r + '" aria-label="Filter AC ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="atf_' + r + '" id="atf_' + r + '" aria-label="ATF ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="injektor_' + r + '" id="injektor_' + r + '" aria-label="Injektor ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="ps_' + r + '" id="ps_' + r + '" aria-label="Power Steering ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="coolant_' + r + '" id="coolant_' + r + '" aria-label="Coolant ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="rem_' + r + '" id="rem_' + r + '" aria-label="Minyak Rem ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-done" name="status_done_' + r + '" id="status_done_' + r + '" aria-label="Status Sudah ' + odoFormatted + '"></td>' +
+    '<td><input type="checkbox" class="checkbox-pending" name="status_pending_' + r + '" id="status_pending_' + r + '" aria-label="Status Belum ' + odoFormatted + '"></td>' +
+    '<td><input type="text" name="tanggal_' + r + '" id="tanggal_' + r + '" placeholder="DD-MM-YYYY" aria-label="Tanggal ' + odoFormatted + '"></td>' +
+    '<td><input type="text" name="odo_done_' + r + '" id="odo_done_' + r + '" placeholder="km" aria-label="Odometer saat dilakukan ' + odoFormatted + '"></td>' +
+    '<td><input type="text" name="catatan_' + r + '" id="catatan_' + r + '" placeholder="Catatan..." aria-label="Catatan ' + odoFormatted + '"></td>' +
+    '<td><button class="btn-delete" onclick="resetRow(this)" title="Reset baris ' + odoFormatted + '" aria-label="Reset baris ' + odoFormatted + '">🔄</button></td>';
                 
                 tbody.appendChild(tr);
                 rowIndex++;
