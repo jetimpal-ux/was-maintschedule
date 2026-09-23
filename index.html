@@ -14,13 +14,21 @@
         .header p { color: #b0bec5; font-size: 11px; margin-top: 5px; }
         .edit-hint { font-size: 10px; color: #ffd700; margin-top: 5px; font-style: italic; }
         .toolbar { display: flex; gap: 8px; padding: 12px 15px; background: #16213e; flex-wrap: wrap; align-items: center; }
-        .toolbar button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .toolbar button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.3s; }
         .btn-save { background: #4caf50; color: white; }
+        .btn-save:hover { background: #388e3c; }
         .btn-edit { background: #ff9800; color: white; }
+        .btn-edit:hover { background: #f57c00; }
         .btn-print { background: #2196f3; color: white; }
+        .btn-print:hover { background: #1565c0; }
         .btn-add-row { background: #9c27b0; color: white; }
+        .btn-add-row:hover { background: #7b1fa2; }
         .btn-delete { background: #f44336; color: white; padding: 5px 10px; font-size: 11px; }
+        .btn-delete:hover { background: #d32f2f; }
         .btn-cloud { background: #00bcd4; color: white; }
+        .btn-cloud:hover { background: #00838f; }
+        .btn-reset { background: #e91e63; color: white; }
+        .btn-reset:hover { background: #c2185b; }
         .print-range-selector { padding: 10px 15px; background: #0f3460; border-radius: 8px; margin: 10px 0; display: none; }
         .print-range-selector select { padding: 6px; border-radius: 4px; border: 1px solid #455a64; background: #1a1a2e; color: #fff; font-size: 11px; }
         .table-container { overflow-x: auto; background: #fff; border-radius: 0 0 10px 10px; }
@@ -164,7 +172,7 @@
                 </select>
             </div>
             <div style="display:flex; gap:5px; align-items:flex-end;">
-                <button class="btn-print" onclick="printSelectedRange()" style="padding:6px 12px; font-size:11px;">🖨️ Print Range</button>
+                <button class="btn-print" onclick="printSelectedRange()" style="padding:6px 12px; font-size:11px;">️ Print Range</button>
                 <button class="btn-edit" onclick="document.getElementById('printRangeSelector').style.display='none'" style="padding:6px 12px; font-size:11px;">✕ Tutup</button>
             </div>
         </div>
@@ -175,9 +183,10 @@
         <button class="btn-save" onclick="saveData()">💾 Simpan</button>
         <button class="btn-cloud" onclick="loadFromGoogleSheets()">☁️ Load dari Cloud</button>
         <button class="btn-edit" onclick="toggleEdit()">✏️ Edit</button>
-        <button class="btn-print" onclick="showPrintOptions()">🖨️ Print</button>
-        <button class="btn-add-row" onclick="addManualRow()">➕ Tambah Baris</button>
-        <button class="btn-save" onclick="exportToCSV()" style="background:#607d8b;"> Export CSV</button>
+        <button class="btn-print" onclick="showPrintOptions()">️ Print</button>
+        <button class="btn-add-row" onclick="addManualRow()"> Tambah Baris</button>
+        <button class="btn-reset" onclick="resetAll()">🔄 Reset</button>
+        <button class="btn-save" onclick="exportToCSV()" style="background:#607d8b;">📊 Export CSV</button>
     </div>
 
     <div class="legend">
@@ -278,7 +287,7 @@
     </div>
 
     <div class="footer-info">
-        <h3> CATATAN PENTING:</h3>
+        <h3>📋 CATATAN PENTING:</h3>
         <ul>
             <li>Interval berdasarkan kondisi normal pemakaian.</li>
             <li>Gunakan suku cadang dan fluida berkualitas sesuai spesifikasi.</li>
@@ -312,15 +321,14 @@
 
     <script>
         // ============================================
-        // ⚠️️⚠️ GANTI URL DI BAWAH INI ⚠️⚠️⚠️
-        // Paste URL Web App Google Apps Script kamu di sini
-        // Contoh: https://script.google.com/macros/s/AKfycbxXXXXXXX/exec
+        // ⚠️ GANTI URL DI BAWAH INI dengan URL Web App kamu
         // ============================================
         var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPUgBYEOvV6nCzpLahEMUa4hMkj5rtRhynnyUvpWiCqRn87wpK_IsQ33IYiwSy7tiAkw/exec';
 
         var editMode = false;
         var currentVehicleId = null;
         var rowIndex = 3;
+        var hasUnsavedChanges = false;
 
         function generateScheduleRows() {
             var tbody = document.getElementById('tableBody');
@@ -367,6 +375,14 @@
                 tbody.appendChild(tr);
                 rowIndex++;
             }
+
+            // Tambahkan event listener untuk track perubahan
+            var allInputs = document.querySelectorAll('#tableBody input');
+            for (var i = 0; i < allInputs.length; i++) {
+                allInputs[i].addEventListener('change', function() {
+                    hasUnsavedChanges = true;
+                });
+            }
         }
 
         function toggleEdit() {
@@ -381,7 +397,7 @@
             if (editMode) {
                 btn.textContent = '🔒 Kunci';
                 btn.style.background = '#f44336';
-                showNotification('✏️ Mode Edit Aktif', 'info');
+                showNotification('✏️ Mode Edit Aktif - Ubah data lalu klik Simpan', 'info');
             } else {
                 btn.textContent = '✏️ Edit';
                 btn.style.background = '#ff9800';
@@ -406,6 +422,7 @@
                 modelInput.value = vehicleName;
                 customInput.value = '';
             }
+            hasUnsavedChanges = true;
         }
 
         function syncVehicleTitle() {
@@ -419,8 +436,12 @@
                 customInput.value = modelInput.value;
                 select.value = 'custom';
             }
+            hasUnsavedChanges = true;
         }
 
+        // ============================================
+        // KIRIM DATA KE GOOGLE SHEETS (HANYA SAAT KLIK SIMPAN)
+        // ============================================
         function sendToGoogleSheets(data) {
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_KAMU_DI_SINI' || GOOGLE_SCRIPT_URL.indexOf('script.google.com') === -1) {
                 showNotification('⚠️ URL Google Sheets belum disetting! Data hanya disimpan lokal.', 'error');
@@ -452,6 +473,7 @@
                 }).then(function() {
                     dot.className = 'status-dot connected';
                     text.textContent = 'Google Sheets: Terhubung ✓';
+                    hasUnsavedChanges = false;
                     showNotification('✅ Data terkirim ke Google Sheets!', 'success');
                 }).catch(function(error) {
                     dot.className = 'status-dot';
@@ -462,14 +484,14 @@
             } catch (error) {
                 dot.className = 'status-dot';
                 text.textContent = 'Google Sheets: Gagal terhubung';
-                showNotification(' Gagal: ' + error.message, 'error');
+                showNotification('❌ Gagal: ' + error.message, 'error');
                 return false;
             }
         }
 
         function loadFromGoogleSheets() {
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_KAMU_DI_SINI' || GOOGLE_SCRIPT_URL.indexOf('script.google.com') === -1) {
-                showNotification('⚠️ URL Google Sheets belum disetting!', 'error');
+                showNotification('️ URL Google Sheets belum disetting!', 'error');
                 return;
             }
 
@@ -508,6 +530,9 @@
                 });
         }
 
+        // ============================================
+        // SIMPAN DATA - HANYA SAAT KLIK TOMBOL SIMPAN
+        // ============================================
         function saveData() {
             var data = {
                 vehicleTitle: document.getElementById('vehicleTitle').textContent,
@@ -545,11 +570,15 @@
                 data.rows.push(rowData);
             }
 
+            // Simpan ke localStorage
             localStorage.setItem('maintenance_data', JSON.stringify(data));
+            
+            // Kirim ke Google Sheets
             sendToGoogleSheets(data);
 
             var now = new Date();
             document.getElementById('lastSaved').textContent = 'Terakhir disimpan: ' + now.toLocaleString('id-ID');
+            hasUnsavedChanges = false;
         }
 
         function loadData() {
@@ -568,6 +597,58 @@
                 document.getElementById('lastSaved').textContent = 'Terakhir dimuat: ' + now.toLocaleString('id-ID');
                 showNotification('📂 Data lokal dimuat!', 'info');
             }
+        }
+
+        // ============================================
+        //  RESET SEMUA KE DEFAULT
+        // ============================================
+        function resetAll() {
+            if (!confirm('⚠️ PERINGATAN!\n\nSemua data akan direset ke default:\n- Semua checkbox akan dikosongkan\n- Semua input text akan dihapus\n- Tipe kendaraan kembali ke Custom\n- Data kendaraan (VIN, Nama, dll) akan dikosongkan\n\nLanjutkan?')) {
+                return;
+            }
+
+            // 1. Reset header kendaraan
+            document.getElementById('vehicleTitle').textContent = 'CHEVROLET CAPTIVA C140 2.0 DIESEL';
+            
+            // 2. Reset tipe kendaraan
+            document.getElementById('vehicleType').value = 'custom';
+            document.getElementById('customVehicleName').value = '';
+            document.getElementById('vehicleModel').value = '';
+            
+            // 3. Reset data kendaraan
+            document.getElementById('vinNumber').value = '';
+            document.getElementById('ownerName').value = '';
+            document.getElementById('plateNumber').value = '';
+            
+            // 4. Reset semua checkbox di tabel
+            var allCheckboxes = document.querySelectorAll('#tableBody input[type="checkbox"]');
+            for (var i = 0; i < allCheckboxes.length; i++) {
+                allCheckboxes[i].checked = false;
+            }
+            
+            // 5. Reset semua input text di tabel
+            var allInputs = document.querySelectorAll('#tableBody input[type="text"]');
+            for (var i = 0; i < allInputs.length; i++) {
+                allInputs[i].value = '';
+            }
+            
+            // 6. Hapus baris manual tambahan (sisakan 3 baris default)
+            var manualRows = document.querySelectorAll('.manual-row');
+            for (var i = 3; i < manualRows.length; i++) {
+                manualRows[i].remove();
+            }
+            
+            // 7. Reset status koneksi
+            document.getElementById('connectionDot').className = 'status-dot';
+            document.getElementById('connectionText').textContent = 'Google Sheets: Belum terhubung';
+            document.getElementById('lastSaved').textContent = 'Belum disimpan';
+            
+            // 8. Hapus data dari localStorage
+            localStorage.removeItem('maintenance_data');
+            
+            hasUnsavedChanges = false;
+            
+            showNotification('🔄 Semua data berhasil direset ke default!', 'success');
         }
 
         function showPrintOptions() {
@@ -641,12 +722,14 @@
             
             tbody.insertBefore(tr, tbody.firstChild);
             rowIndex++;
+            hasUnsavedChanges = true;
             showNotification('➕ Baris manual ditambahkan!', 'success');
         }
 
         function deleteRow(btn) {
             if (confirm('Hapus baris ini?')) {
                 btn.closest('tr').remove();
+                hasUnsavedChanges = true;
                 showNotification('🗑️ Baris dihapus!', 'info');
             }
         }
@@ -661,6 +744,7 @@
             for (var i = 0; i < inputs.length; i++) {
                 inputs[i].value = '';
             }
+            hasUnsavedChanges = true;
             showNotification('🔄 Baris direset!', 'info');
         }
 
@@ -690,7 +774,7 @@
             a.href = url;
             a.download = 'maintenance_' + vehicleTitle.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.csv';
             a.click();
-            showNotification(' CSV diexport!', 'success');
+            showNotification('📊 CSV diexport!', 'success');
         }
 
         function showNotification(message, type) {
@@ -701,18 +785,29 @@
             setTimeout(function() { notif.style.display = 'none'; }, 3000);
         }
 
-        setInterval(function() {
-            if (editMode) { saveData(); }
-        }, 30000);
+        // ============================================
+        // PERINGATAN SEBELUM TINGGALKAN HALAMAN
+        // ============================================
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar?';
+                return e.returnValue;
+            }
+        });
 
         document.getElementById('vehicleTitle').addEventListener('blur', function() {
             document.getElementById('vehicleModel').value = this.textContent;
+            hasUnsavedChanges = true;
         });
 
         document.getElementById('vehicleTitle').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
         });
 
+        // ============================================
+        // INIT - TANPA AUTO-SAVE
+        // ============================================
         window.addEventListener('load', function() {
             generateScheduleRows();
             loadData();
