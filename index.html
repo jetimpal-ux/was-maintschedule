@@ -343,15 +343,15 @@ var step = 5000;
                 tr.dataset.odometer = odo;
                 tr.dataset.rowIndex = rowIndex;
 
-                var oliCheck = true;
-                var solarCheck = (odo % 10000 === 0);
-                var udaraCheck = (odo % 25000 === 0);
-                var acCheck = (odo % 25000 === 0);
-                var atfCheck = (odo % 25000 === 0);
-                var injektorCheck = [200000, 300000, 400000].indexOf(odo) !== -1;
-                var psCheck = [250000, 350000].indexOf(odo) !== -1;
-                var coolantCheck = [250000, 350000].indexOf(odo) !== -1;
-                var remCheck = [250000, 350000].indexOf(odo) !== -1;
+                var oliCheck = false;
+var solarCheck = (odo % 10000 === 0);      // Filter Solar
+var udaraCheck = (odo % 25000 === 0);      // Filter Udara
+var acCheck = (odo % 25000 === 0);         // Filter AC
+var atfCheck = (odo % 25000 === 0);        // ATF
+var injektorCheck = [70000, 140000, 210000].indexOf(odo) !== -1;  // Injektor
+var psCheck = [50000, 100000].indexOf(odo) !== -1;                // Power Steering
+var coolantCheck = [70000, 140000].indexOf(odo) !== -1;           // Coolant
+var remCheck = [50000, 100000].indexOf(odo) !== -1;               // Minyak Rem
 
                 var r = rowIndex;
                 var odoFormatted = odo.toLocaleString('id-ID');
